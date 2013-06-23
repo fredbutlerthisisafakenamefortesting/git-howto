@@ -1,0 +1,397 @@
+
+
+Set up git on a new machine (in a new account):
+--------------------------------------------------
+    $ git config --global user.name "Brenda J. Butler"
+    $ git config --global user.email "bjb@linuxbutler.ca"
+
+
+clone an existing project
+--------------------------------------------------
+    $ git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git
+
+
+
+Import a new project (puts repo with project):
+--------------------------------------------------
+    $ tar xzf project.tar.gz
+    $ cd project
+# puts repo in project/.git
+    $ git init [--bare] [--shared]
+# if $GIT_DIR is defined, puts project repo in $GIT_DIR/.git
+# adds every file into index.  Not a good idea.
+    $ git add .
+# interactive add
+    $ git add -i
+# commits the index contents
+    $ git commit
+
+
+Make a central git repo
+--------------------------------------------------
+
+# writeable by all members of a group
+    $ git init --bare --shared
+
+
+Making changes and committing them
+--------------------------------------------------
+# add file1 file2 file3 into index
+    $ git add file1 file2 file3
+# view things that are to be committed
+    $ git diff --cached
+# view differences between working directory & index
+    $ git diff
+# summary of situation
+    $ git status
+# unstage changes to file1
+    $ git reset HEAD file1
+# throw away changes to file1 ("unmodifying a modified file")
+    $ git checkout -- file1
+# throw away changes in working directory and in index
+    $ git reset --hard HEAD
+# throw away changes in working directory and in index; also checkout v2.6.17
+    $ git reset --hard v2.6.17
+# when index contains desired changes, commit them
+    $ git commit
+# git add and git commit in one step (for the brave/stupid) -
+# does NOT add new files!!
+    $ git commit -a
+
+
+# removing staged changes  (use git add interactive - it's what Bart does)
+    $ git add -i
+# remove a file from index but not from working dir
+    $ git rm --cached foo
+# another way
+    $ git reset HEAD file1
+    $ git reset --hard HEAD^     <- careful with this one
+
+# remove a file from both index and sandbox (supposedly):
+    $ git rm path/to/file
+
+# add a "delete this file" to the index
+# (when file is already gone from sandbox):
+    $ git rm path/to/file
+
+
+# tell git to keep a file in repo, but don't commit more changes
+# (good for settings.py, config files)
+    $ git update-index --assume-unchanged <file>
+    $ git update-index --no-assume-unchanged <file>
+
+# to see which files have had --assume-unchanged applied to them:
+# files which have had that applied, will have a lower-case letter in left-most column
+    $ git ls-files -v [<file>]
+
+# presumably, fix up a slightly corrupted repo:
+    $ git fsck
+    $ git fsck --unreachable
+
+
+# prune all unreachable objects from the object database
+    $ git prune
+
+# clean up unnecessary files and optimize the local repository
+    $ git gc --prune
+
+
+Unstaging changes
+--------------------------------------------------
+# unstage changes to file1 (remove file from index)
+    $ git reset HEAD file1
+$ git reset --hard HEAD^ # reset your current branch and working
+                         # directory to its state at HEAD^
+
+Be careful with that last command: in addition to losing any changes
+in the working directory, it will also remove all later commits from
+this branch.  (!)  If this branch is the only branch containing those
+commits, they will be lost. Also, don't use git-reset on a
+publicly-visible branch that other developers pull from, as it will
+force needless merges on other developers to clean up the history. If
+you need to undo changes that you have pushed, use git-revert instead.
+
+The git-grep command can search for strings in any version of your
+project, so
+
+
+Commit messages
+--------------------------------------------------
+First line:  brief description (< 50 chars)
+After:  detailed description
+
+
+Revision Numbers
+--------------------------------------------------
+# shows how to specify the various ancestors of HEAD or
+# of some arbitrary version
+    $ man git-rev-parse
+
+
+Viewing project history
+--------------------------------------------------
+# show the latest checkin
+    $ git show
+# show the latest checkins in reverse chron order
+    $ git log
+    $ git log --graph --pretty=oneline --abbrev-commit --decorate=short
+# with diffs:
+    $ git log -p
+    $ git diff --pretty=oneline --stat=40
+# look for diffs with string <blorfl>
+    $ git log -Sblorfl
+# details on a particular commit
+    $ git show 983729619027aabedf973
+    $ git show HEAD
+    $ git show branchname
+    $ git show HEAD^ # show details on HEAD's parent
+    $ git show HEAD^2 # show details on HEAD's other parent
+    $ git show v2.5:fs/locks.c
+
+    $ git log --stat --summary
+    $ git log --stat=60 --pretty=oneline
+    $ git log --stat=60
+# view branches
+    $ git branch -va
+    $ git branch -r
+# remove a branch
+    $ git branch -d <branch-name>
+# remove branch newfeature from remote repo "origin"
+    $ git push origin :newfeature
+
+
+Viewing project contents
+--------------------------------------------------
+    $ git ls-tree -r HEAD python/tax
+# see the contents of config/email.yml in the version before the current one
+# you can use this to cat a commit (shows what tree was committed)
+# you can use this to cat a tree (shows files and dirs)
+# you can use this to cat a dir (shows files)
+# you can use this to cat a file - it will be the file as of that rev.
+    $ git cat-file -p 8392729
+    $ git cat-file -p HEAD^:config/email.yml
+
+
+git GUI
+--------------------------------------------------
+    $ gitk --all
+
+
+tagging
+--------------------------------------------------
+# there are lightweight tags and regular tags
+# lightweight tags:
+    $ git tag v2.5 HEAD
+    $ git tag v2.5 c8732b29d
+
+# regular tags:
+    $ git tag [ -a|-s|-u <key-id> ] name <head> # some possibilities omitted
+    $ git tag -m '' v1_0
+
+    $ git tag stable-1 1b2e1d63ff
+    $ git tag -a -m 'msg' tag-name commit-name
+    $ git tag -a -F file-with-msg tag-name commit-name
+    $ git tag -a tag-name commit-name
+    $ git tag -a -f tag-name commit-name
+
+
+
+# how can one tag a subdir only?
+CAN'T!!!
+
+# delete a tag:
+    $ git tag -d <tag-name>...
+
+# list tags:
+    $ git tag
+    $ git tag -l
+
+# give version-id for thetag:
+    $ git rev-parse thetag
+
+
+Branching:
+--------------------------------------------------
+# branch from the current checkout:
+    $ git branch foo
+    $ git branch <new-branch-name <start-point>
+
+# switch to branch foo
+    $ git checkout foo
+
+# make a branch and switch to it
+    $ git checkout -b foo
+
+# merge from branch foo
+    $ git merge foo
+
+# diff to another branch (assume we're not on master and we diff against master)
+    $ git diff master..HEAD
+    $ git format-patch master..test
+
+# can also do that with logs
+    $ git log master..HEAD
+    $ git shortlog master..HEAD
+
+
+Merging:
+--------------------------------------------------
+# "merging" means taking changes from a branch and
+# putting them on another branch
+
+# commit changes to branch.  Then:
+    $ git checkout master
+    $ git merge [--squash] [--no-commit] branch
+
+# if there are conflicts, edit the files to remove conflicts
+# git add will remove conflict marker
+# if there were conflicts or if you specified "--no-commit", then commit
+    $ git add xxx
+    $ git commit
+
+
+Making your personal repo available outside
+aka "publishing" your git repo
+distributed repositories
+--------------------------------------------------
+
+# create an empty remote repo ("public" repo):
+# ssh host
+    $ mkdir /srv/git/project
+    $ cd /srv/git/project
+    $ git init --bare
+    $ exit
+
+    $ cd /local/project  # where the local, personal  git repo is
+    $ git remote add origin ssh://host/srv/git/project
+    $ git push origin master
+
+eg
+
+$ git remote add origin ssh://linuxbutler.ca:322/srv/repositories/git/prj
+
+
+# see list of remotes:
+    git remote -v
+
+# show info on remotes:
+    git remote show
+
+# show info obtained by talking to another remote called origin:
+    git remote show origin
+
+# show the branches and tags in the remote repo, including those that only exist remotely:
+    git ls-remote [origin]
+
+
+First checkout of someone else's project:
+--------------------------------------------------
+    $ git-clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git linux-2.6
+
+# update to Linus' latest
+    # is this for real?  should it be git clone? or git pull origin?
+    $ git pull git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git
+
+    $ git fetch origin
+
+
+Push a branch to a remote repo
+--------------------------------------------------
+# This works even if the remote repo doesn't have that branch yet
+    $ git push remotename branchname
+
+# Under another name:
+    $ git push remotename localname:remotename
+
+
+Fetch a remote branch and automatically make a remote-tracking local branch
+--------------------------------------------------
+    $ git checkout --track origin/otherbranch
+
+
+Delete a remote branch
+--------------------------------------------------
+    $ git push origin :obsoletebranch
+
+Attach your existing branch to a remote existing branch,
+so you can git push/git pull without naming "origin" or "master"
+--------------------------------------------------
+git config branch.master.merge refs/heads/master
+git config branch.master.remote origin
+
+
+TO WORK WITH AN SVN REPOSITORY BUT WORK WITH GIT LOCALLY:
+--------------------------------------------------
+# NOTE: make sure you have your perl bindings to your local svn installation.
+    $ git-svn clone [http location of an svn repository]
+    $ git-svn dcommit   # note the d in dcommit
+    $ git-svn rebase
+
+
+--------------------------------------------------
+sources/references
+
+
+http://linux.yyz.us/git-howto.html
+Pro Git|Scott Chacon|Apress|978-1-4302-1833-3|2009|progit.org|www.apress.com
+http://git-scm.com/book
+http://gitready.com
+http://www.jukie.net/bart/blog/tag/git
+http://excess.org/article/2008/07/ogre-git-tutorial/
+http://edgyu.excess.org/git-tutorial/2008-07-09/intro-to-git.pdf
+
+--------------------------------------------------
+
+# .git directory contents
+
+    $ cat .git/config
+
+    $ cat .git/HEAD
+    $ cat .git/MERGE_HEAD
+    $ cat .git/ORIG_HEAD
+    $ cat .git/MERGE_HEAD
+
+
+--------------------------------------------------
+
+git submodules
+    (from http://speirs.org/blog/2009/5/11/understanding-git-submodules.html)
+
+Git submodules are implemented using two moving parts:
+    the .gitmodules file
+    special kind of tree object.
+
+example .gitmodules file:
+	[submodule "FooKit"]
+		path = FooKit     # where in superproject the submodule goes
+		url = git@github.com:fspeirs/fookit.git
+
+
+You check in the submodule into the superproject:
+
+    cd super
+    git submodule add sub
+    git commit sub
+
+git commits a special kind of tree for sub.
+
+list of submodules and their statuses:
+
+    git submodule status
+    -85ab8ba4edf9168ab051ded7ddbbe20861b71528 ProjectA
+    +85ab8ba4edf9168ab051ded7ddbbe20861b71528 ProjectB
+
+projectB has changed in the sandbox compared to what super thinks the
+version should be.
+
+.gitmodules should be checked in to the super project along with
+the directory name of the sub project
+
+Be sure to commit and push the subproject before pushing the
+super project, or people who fetch the projects will have a
+dangling reference in the super project.
+
+
+See also
+    git submodule init
+    git submodule update
